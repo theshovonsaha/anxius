@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { AIProvider } from '../../types/ai';
 import { Eye, EyeOff } from 'lucide-react';
+import { AIProviderFactory } from '../../services/ai/factory';
 
 interface APIKeyInputProps {
   provider: AIProvider;
+  onValidationChange?: (isValid: boolean) => void;
 }
 
-export const APIKeyInput: React.FC<APIKeyInputProps> = ({ provider }) => {
+export const APIKeyInput: React.FC<APIKeyInputProps> = ({ provider, onValidationChange }) => {
   const [apiKey, setApiKey] = useState('');
   const [showKey, setShowKey] = useState(false);
 
@@ -18,10 +20,12 @@ export const APIKeyInput: React.FC<APIKeyInputProps> = ({ provider }) => {
   }, [provider]);
 
   const handleSave = () => {
-    if (apiKey.trim()) {
+    const isValid = AIProviderFactory.validateApiKey(provider, apiKey);
+    if (isValid) {
       localStorage.setItem(`${provider}_api_key`, apiKey.trim());
+      onValidationChange?.(true);
     } else {
-      localStorage.removeItem(`${provider}_api_key`);
+      onValidationChange?.(false);
     }
   };
 

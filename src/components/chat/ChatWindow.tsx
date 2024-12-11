@@ -1,9 +1,9 @@
 import React from 'react';
 import { MessageList } from './MessageList';
 import { MessageInput } from './MessageInput';
-import { Settings } from './Settings';
+import { Settings } from '../settings/Settings';
 import { X, Settings as SettingsIcon } from 'lucide-react';
-import { useChatStore } from '../store/chatStore';
+import { useChatStore } from '../../store/chatStore';
 
 export const ChatWindow: React.FC = () => {
   const [showSettings, setShowSettings] = React.useState(false);

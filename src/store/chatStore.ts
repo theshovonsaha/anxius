@@ -17,6 +17,7 @@ export const useChatStore = create<ChatState>((set) => ({
     companyName: '',
     welcomeMessage: 'Hello! How can I assist you today?',
     knowledgeBase: null,
+    model: ''
   },
   isOpen: false,
   setConfig: (newConfig) =>

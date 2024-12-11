@@ -1,3 +1,4 @@
+//types/index.ts
 export type AIProvider = 'claude' | 'openai' | 'mistral' | 'gemini' | 'nvidia';
 
 export interface Message {
@@ -7,9 +8,11 @@ export interface Message {
   timestamp: Date;
 }
 
+// types/index.ts
 export interface ChatConfig {
   aiProvider: AIProvider;
   companyName: string;
   welcomeMessage: string;
   knowledgeBase: File | null;
+  model: string;
 }

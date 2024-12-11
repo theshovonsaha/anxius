@@ -1,10 +1,10 @@
 import { AIProviderConfig, AIResponse, AIProvider } from '../../../types/ai';
 import { BaseAIProvider } from './base';
 
-export class ClaudeProvider extends BaseAIProvider {
+export class MistralProvider extends BaseAIProvider {
   constructor(provider: AIProvider, config: AIProviderConfig) {
-    // Claude's default rate limit
-    super(provider, config, 50, 60000);
+    // Mistral's default rate limit
+    super(provider, config, 100, 60000);
   }
 
   async generateResponse(message: string, context: string): Promise<AIResponse> {
@@ -13,29 +13,34 @@ export class ClaudeProvider extends BaseAIProvider {
         return { content: '', error: 'Rate limit exceeded. Please try again later.' };
       }
 
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
+      const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-api-key': this.apiKey,
-          'anthropic-version': '2023-06-01',
+          'Authorization': `Bearer ${this.apiKey}`,
         },
         body: JSON.stringify({
-          model: 'claude-3-opus-20240229',
+          model: 'mistral-large-latest',
           messages: [
-            { role: 'system', content: `You are a helpful customer service agent. Use this context to answer questions: ${context}` },
+            {
+              role: 'system',
+              content: context 
+                ? `You are a helpful customer service agent. Use this context to answer questions: ${context}`
+                : 'You are a helpful customer service agent.'
+            },
             { role: 'user', content: message }
           ],
+          temperature: 0.7,
           max_tokens: 500,
         }),
       });
 
       if (!response.ok) {
-        throw new Error(`Claude API error: ${response.statusText}`);
+        throw new Error(`Mistral API error: ${response.statusText}`);
       }
 
       const data = await response.json();
-      return { content: data.content[0].text };
+      return { content: data.choices[0].message.content };
     } catch (error) {
       return this.handleError(error);
     }
