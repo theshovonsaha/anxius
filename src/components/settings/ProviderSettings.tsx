@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
+import { Info, ChevronDown, ChevronUp } from 'lucide-react';
 import { AIProvider, PROVIDER_INFO } from '../../types/ai';
 import { APIKeyInput } from './APIKeyInput';
-import { Info, ChevronDown, ChevronUp } from 'lucide-react';
+import { SettingsField } from './SettingsField';
 
 interface ProviderSettingsProps {
   provider: AIProvider;
@@ -10,7 +11,7 @@ interface ProviderSettingsProps {
     organizationId?: string;
     baseUrl?: string;
   }) => void;
-  onValidationChange?: (isValid: boolean) => void; // Add this line
+  onValidationChange?: (isValid: boolean) => void;
 }
 
 export const ProviderSettings: React.FC<ProviderSettingsProps> = ({
@@ -19,41 +20,45 @@ export const ProviderSettings: React.FC<ProviderSettingsProps> = ({
   onSettingsChange,
   onValidationChange,
 }) => {
-  const [isValid, setIsValid] = useState(false);
   const info = PROVIDER_INFO[provider];
-  const [showAdvanced, setShowAdvanced] = useState(false);
-  const [model, setModel] = useState(info.defaultModel);
-  const [organizationId, setOrganizationId] = useState('');
-  const [baseUrl, setBaseUrl] = useState('');
+  const [state, setState] = useState(() => ({
+    isValid: false,
+    showAdvanced: false,
+    model: localStorage.getItem(`${provider}_model`) || info.defaultModel,
+    organizationId: localStorage.getItem(`${provider}_org_id`) || '',
+    baseUrl: localStorage.getItem(`${provider}_base_url`) || ''
+  }));
 
-  useEffect(() => {
-    // Load saved settings
-    const savedOrgId = localStorage.getItem(`${provider}_org_id`);
-    const savedBaseUrl = localStorage.getItem(`${provider}_base_url`);
-    if (savedOrgId) setOrganizationId(savedOrgId);
-    if (savedBaseUrl) setBaseUrl(savedBaseUrl);
-  }, [provider]);
-    
-
-  const handleModelChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  // Memoize handlers to prevent unnecessary re-renders
+  const handleModelChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
     const newModel = e.target.value;
-    setModel(newModel);
+    setState(prev => ({ ...prev, model: newModel }));
+    localStorage.setItem(`${provider}_model`, newModel);
     onModelChange?.(newModel);
-  };
+  }, [provider, onModelChange]);
 
-  const handleOrganizationIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleOrganizationIdChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const newOrgId = e.target.value;
-    setOrganizationId(newOrgId);
+    setState(prev => ({ ...prev, organizationId: newOrgId }));
     localStorage.setItem(`${provider}_org_id`, newOrgId);
-    onSettingsChange?.({ organizationId: newOrgId, baseUrl });
-  };
+    onSettingsChange?.({ organizationId: newOrgId, baseUrl: state.baseUrl });
+  }, [provider, state.baseUrl, onSettingsChange]);
 
-  const handleBaseUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleBaseUrlChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const newBaseUrl = e.target.value;
-    setBaseUrl(newBaseUrl);
+    setState(prev => ({ ...prev, baseUrl: newBaseUrl }));
     localStorage.setItem(`${provider}_base_url`, newBaseUrl);
-    onSettingsChange?.({ organizationId, baseUrl: newBaseUrl });
-  };
+    onSettingsChange?.({ organizationId: state.organizationId, baseUrl: newBaseUrl });
+  }, [provider, state.organizationId, onSettingsChange]);
+
+  const handleValidationChange = useCallback((newIsValid: boolean) => {
+    setState(prev => ({ ...prev, isValid: newIsValid }));
+    onValidationChange?.(newIsValid);
+  }, [onValidationChange]);
+
+  const toggleAdvanced = useCallback(() => {
+    setState(prev => ({ ...prev, showAdvanced: !prev.showAdvanced }));
+  }, []);
 
   return (
     <div className="space-y-4 bg-white rounded-lg border p-4">
@@ -75,7 +80,7 @@ export const ProviderSettings: React.FC<ProviderSettingsProps> = ({
           </div>
         </div>
         <div className="text-sm text-gray-500">
-          {isValid ? (
+          {state.isValid ? (
             <span className="text-green-600">✓ Configured</span>
           ) : (
             <span className="text-red-600">× Not Configured</span>
@@ -84,70 +89,68 @@ export const ProviderSettings: React.FC<ProviderSettingsProps> = ({
       </div>
 
       <APIKeyInput
-  provider={provider}
-  onValidationChange={(isValid) => {
-    setIsValid(isValid);
-    onValidationChange?.(isValid);
-  }}
-/>
+        provider={provider}
+        onValidationChange={handleValidationChange}
+      />
 
-      <div className="mt-4">
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Model
-        </label>
+      <SettingsField 
+        label="Model"
+        description="Select the AI model to use for this provider"
+      >
         <select
-          value={model}
+          value={state.model}
           onChange={handleModelChange}
           className="w-full p-2 border rounded-lg bg-white"
-          disabled={!isValid}
+          disabled={!state.isValid}
         >
-          {info.models.map((model) => (
-            <option key={model} value={model}>
-              {model}
+          {info.models.map((modelOption) => (
+            <option key={modelOption} value={modelOption}>
+              {modelOption}
             </option>
           ))}
         </select>
-      </div>
+      </SettingsField>
 
       <div className="border-t pt-4 mt-4">
         <button
-          onClick={() => setShowAdvanced(!showAdvanced)}
+          onClick={toggleAdvanced}
           className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900"
         >
-          {showAdvanced ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-          {showAdvanced ? 'Hide' : 'Show'} Advanced Settings
+          {state.showAdvanced ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+          {state.showAdvanced ? 'Hide' : 'Show'} Advanced Settings
         </button>
 
-        {showAdvanced && (
+        {state.showAdvanced && (
           <div className="mt-4 space-y-4">
             {info.requiresOrganizationId && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Organization ID
-                </label>
+              <SettingsField 
+                label="Organization ID"
+                description="Optional: Enter your organization ID if you have one"
+              >
                 <input
                   type="text"
-                  value={organizationId}
+                  value={state.organizationId}
                   onChange={handleOrganizationIdChange}
                   placeholder="Enter organization ID (optional)"
                   className="w-full p-2 border rounded-lg"
                 />
-              </div>
+              </SettingsField>
             )}
 
             {info.requiresBaseUrl && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Base URL
-                </label>
+              <SettingsField 
+                label="Base URL"
+                description="Enter your custom API endpoint URL"
+              >
                 <input
                   type="url"
-                  value={baseUrl}
+                  value={state.baseUrl}
                   onChange={handleBaseUrlChange}
                   placeholder="Enter API base URL"
                   className="w-full p-2 border rounded-lg"
+                  required={info.requiresBaseUrl}
                 />
-              </div>
+              </SettingsField>
             )}
           </div>
         )}

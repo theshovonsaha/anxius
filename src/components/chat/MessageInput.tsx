@@ -1,9 +1,18 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Send } from 'lucide-react';
-import { useMessageInput } from '../../hooks/useMessageInput';
+import { useChat } from '../../hooks/useChat';
 
 export const MessageInput: React.FC = () => {
-  const { message, setMessage, handleSubmit, isLoading } = useMessageInput();
+  const [message, setMessage] = useState('');
+  const { sendMessage, isLoading } = useChat();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!message.trim() || isLoading) return;
+
+    await sendMessage(message.trim());
+    setMessage(''); // Clear input after sending
+  };
 
   return (
     <form onSubmit={handleSubmit} className="p-4 border-t">

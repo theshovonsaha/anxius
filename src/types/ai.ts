@@ -1,6 +1,19 @@
-// src/types/ai.ts
-
 export type AIProvider = 'claude' | 'openai' | 'mistral' | 'gemini' | 'nvidia';
+
+export interface Message {
+  id: string;
+  content: string;
+  sender: 'user' | 'ai';
+  timestamp: Date;
+}
+
+export interface ChatConfig {
+  aiProvider: AIProvider;
+  companyName: string;
+  welcomeMessage: string;
+  knowledgeBase: File | null;
+  model: string;
+}
 
 export interface AIProviderConfig {
   apiKey: string;
@@ -65,7 +78,7 @@ export const PROVIDER_INFO: Record<AIProvider, AIProviderInfo> = {
     description: 'Open-source language models with strong performance',
     apiKeyPattern: /^[a-zA-Z0-9]{32,}$/,
     apiKeyFormat: '32+ character key',
-    defaultModel: 'mistral-large-latest',
+    defaultModel: 'mistral-medium',
     models: ['mistral-large-latest', 'mistral-medium', 'mistral-small'],
     supportsStreaming: true,
     maxTokens: 4096,
@@ -159,7 +172,6 @@ export interface AIProviderResponse {
   };
 }
 
-// types/ai.ts (add this interface with the existing interfaces)
 export interface KnowledgeBase {
   id: string;
   content: string;

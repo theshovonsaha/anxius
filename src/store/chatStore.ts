@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { AIProvider, Message, ChatConfig } from '../types';
+import { Message, ChatConfig } from '../types';
 
 interface ChatState {
   messages: Message[];
