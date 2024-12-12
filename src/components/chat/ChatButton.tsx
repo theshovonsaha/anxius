@@ -8,7 +8,7 @@ export const ChatButton: React.FC = () => {
   return (
     <button
       onClick={toggleChat}
-      className={`fixed bottom-4 right-4 p-4 rounded-full shadow-lg transition-colors ${
+      className={`fixed right-4 p-4 rounded-full shadow-lg transition-colors ${
         isOpen ? 'bg-gray-600' : 'bg-blue-500 hover:bg-blue-600'
       }`}
     >

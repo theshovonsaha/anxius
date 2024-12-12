@@ -75,12 +75,12 @@ export const useProviderSettings = (provider: AIProvider): UseProviderSettingsRe
 
   const validateSettings = () => {
     // Check API key format
-    if (!info.apiKeyPattern.test(settings.apiKey)) {
-      return {
-        isValid: false,
-        error: `Invalid API key format. Expected format: ${info.apiKeyFormat}`,
-      };
-    }
+    // if (!info.apiKeyPattern.test(settings.apiKey)) {
+    //   return {
+    //     isValid: false,
+    //     error: `Invalid API key format. Expected format: ${info.apiKeyFormat}`,
+    //   };
+    // }
 
     // Check required fields
     if (info.requiresBaseUrl && !settings.baseUrl) {
